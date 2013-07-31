@@ -1,0 +1,5 @@
+etc
+usr/bin
+usr/share/ffmpeg/ffprobe.xsd
+usr/share/ffmpeg/*.ffpreset
+usr/share/man
