@@ -1,3 +1,9 @@
+ffmpeg (6:2.0.1-1bci1) precise; urgency=low
+
+  * Updated project to 2.0.1
+
+ -- Luke Curley <lcurley@bitcasa.com>  Mon, 12 Aug 2013 14:44:03 -0700
+
 ffmpeg (6:0.10.8-1bci1) precise; urgency=low
 
   * Using git to track changes instead of random patches.
