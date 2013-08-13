@@ -114,6 +114,7 @@ typedef enum {
     SECTION_ID_STREAM_DISPOSITION,
     SECTION_ID_STREAMS,
     SECTION_ID_STREAM_TAGS,
+    SECTION_ID_STREAM_KEYFRAMES,
 } SectionID;
 
 static struct section sections[] = {
@@ -136,9 +137,10 @@ static struct section sections[] = {
                                         { SECTION_ID_CHAPTERS, SECTION_ID_FORMAT, SECTION_ID_FRAMES, SECTION_ID_STREAMS, SECTION_ID_PACKETS,
                                           SECTION_ID_ERROR, SECTION_ID_PROGRAM_VERSION, SECTION_ID_LIBRARY_VERSIONS, -1} },
     [SECTION_ID_STREAMS] =            { SECTION_ID_STREAMS, "streams", SECTION_FLAG_IS_ARRAY, { SECTION_ID_STREAM, -1 } },
-    [SECTION_ID_STREAM] =             { SECTION_ID_STREAM, "stream", 0, { SECTION_ID_STREAM_DISPOSITION, SECTION_ID_STREAM_TAGS, -1 } },
+    [SECTION_ID_STREAM] =             { SECTION_ID_STREAM, "stream", 0, { SECTION_ID_STREAM_DISPOSITION, SECTION_ID_STREAM_TAGS, SECTION_ID_STREAM_KEYFRAMES, -1 } },
     [SECTION_ID_STREAM_DISPOSITION] = { SECTION_ID_STREAM_DISPOSITION, "disposition", 0, { -1 }, .unique_name = "stream_disposition" },
     [SECTION_ID_STREAM_TAGS] =        { SECTION_ID_STREAM_TAGS, "tags", SECTION_FLAG_HAS_VARIABLE_FIELDS, { -1 }, .element_name = "tag", .unique_name = "stream_tags" },
+    [SECTION_ID_STREAM_KEYFRAMES] =   { SECTION_ID_STREAM_KEYFRAMES, "keyframes", SECTION_FLAG_IS_ARRAY, { -1 }, .unique_name = "stream_keyframes" },
 };
 
 static const OptionDef *options;
@@ -590,8 +592,14 @@ static void default_print_str(WriterContext *wctx, const char *key, const char *
 {
     DefaultContext *def = wctx->priv;
 
-    if (!def->nokey)
-        printf("%s%s=", wctx->section_pbuf[wctx->level].str, key);
+    if (!def->nokey) {
+        // TODO BEFORE/IF PUSHING UPSTREAM: Fix other formatters
+        printf("%s", wctx->section_pbuf[wctx->level].str);
+        if (key && key[0] != '\0') {
+            printf("%s", key);
+            printf("=");
+        }
+    }
     printf("%s\n", value);
 }
 
@@ -1157,8 +1165,10 @@ static inline void json_print_item_str(WriterContext *wctx,
     AVBPrint buf;
 
     av_bprint_init(&buf, 1, AV_BPRINT_SIZE_UNLIMITED);
-    printf("\"%s\":", json_escape_str(&buf, key,   wctx));
-    av_bprint_clear(&buf);
+    if (key && key[0] != '\0') {
+        printf("\"%s\":", json_escape_str(&buf, key,   wctx));
+        av_bprint_clear(&buf);
+    }
     printf(" \"%s\"", json_escape_str(&buf, value, wctx));
     av_bprint_finalize(&buf, NULL);
 }
@@ -1719,6 +1729,20 @@ static void show_stream(WriterContext *w, AVFormatContext *fmt_ctx, int stream_i
     if (do_show_data)
         writer_print_data(w, "extradata", dec_ctx->extradata,
                                           dec_ctx->extradata_size);
+
+    if (stream->nb_index_entries > 0) {
+        writer_print_section_header(w, SECTION_ID_STREAM_KEYFRAMES);
+
+        for (int i = 0; i < stream->nb_index_entries; ++i) {
+            AVIndexEntry *index_entry = &stream->index_entries[i];
+
+            if (index_entry->flags & AVINDEX_KEYFRAME == AVINDEX_KEYFRAME) {
+                print_time("", index_entry->timestamp, &stream->time_base);
+            }
+        }
+
+        writer_print_section_footer(w);
+    }
 
     /* Print disposition information */
 #define PRINT_DISPOSITION(flagname, name) do {                                \
