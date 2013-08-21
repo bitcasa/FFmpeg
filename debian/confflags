@@ -90,8 +90,8 @@ confflags += --disable-stripping
 confflags += --enable-pthreads
 confflags += --enable-runtime-cpudetect
 confflags += --prefix=/usr
-confflags += --bindir=/opt/bci/ffmpeg
-confflags += --shlibdir=/opt/bci/ffmpeg
+confflags += --bindir=/opt/bci/bin
+confflags += --shlibdir=/opt/bci/lib
 #shlibdir is also redefined later
 confflags += --fatal-warnings #testing
 confflags += $(shell test -x /usr/bin/yasm || echo --disable-yasm )
@@ -166,7 +166,7 @@ static_build_confflags += --disable-ffprobe
 static_build_confflags += --disable-ffserver
 
 # Configuration flags for the non-optimized shared libraries
-shared_build_confflags += $(confflags) --shlibdir=/opt/bci/ffmpeg
+shared_build_confflags += $(confflags) --shlibdir=/opt/bci/lib
 # amd64 has no problems with optimized shared libs. i386 and arm do.
 ifneq      ($(DEB_HOST_ARCH),amd64)
 shared_build_confflags += $(nooptflags)

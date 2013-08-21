@@ -15,6 +15,8 @@ endif
 include debian/confflags
 OPT_FLAVORS := $(filter-out static shared, $(FLAVORS))
 
+LDFLAGS += "-Wl,-rpath,/opt/bci/lib"
+
 $(info FLAVORS = $(FLAVORS))
 $(info DEB_BUILD_OPTIONS = $(DEB_BUILD_OPTIONS))
 $(info CFLAGS = $(CFLAGS))
@@ -67,7 +69,8 @@ install-common: build $(DH_INSTALL_FILES)
 	dh_testdir
 	dh_testroot
 	dh_prep
-	dh_installdirs -ptmp opt/bci/ffmpeg opt/bci/ffmpeg
+	dh_installdirs -ptmp opt/bci/bin opt/bci/bin
+	dh_installdirs -ptmp opt/bci/lib opt/bci/lib
 	$(foreach flavor,$(FLAVORS),$(call install_flavor,$(flavor)))
 	# don't fail on binary-indep only builds.
 	install -m 644 -D debian-shared/tools/qt-faststart debian/tmp/opt/bci/ffmpeg/qt-faststart
@@ -84,7 +87,7 @@ binary-arch: build install
 	dh_fixperms
 	dh_install
 	dh_makeshlibs -pbci-ffmpeg
-	dh_shlibdeps -lopt/bci/ffmpeg
+	dh_shlibdeps -lopt/bci/bin -lopt/bci/lib
 	dh_installdeb
 	dh_gencontrol
 	dh_md5sums
