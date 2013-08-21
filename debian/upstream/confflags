@@ -89,11 +89,9 @@ confflags += --arch='$(DEB_HOST_ARCH_CPU)'
 confflags += --disable-stripping
 confflags += --enable-pthreads
 confflags += --enable-runtime-cpudetect
+confflags += --extra-version='$(DEB_VERSION)'
+confflags += --libdir=/usr/lib/$(DEB_HOST_MULTIARCH)
 confflags += --prefix=/usr
-confflags += --bindir=/opt/bci/ffmpeg
-confflags += --shlibdir=/opt/bci/ffmpeg
-#shlibdir is also redefined later
-confflags += --fatal-warnings #testing
 confflags += $(shell test -x /usr/bin/yasm || echo --disable-yasm )
 
 ifeq      ($(DEB_HOST_ARCH),armel)
@@ -143,9 +141,6 @@ v3_confflags += $(call cond_enable,/usr/include/opencore-amrwb/dec_if.h,libopenc
 v3_confflags += $(call cond_enable,/usr/include/vo-aacenc/voAAC.h,libvo-aacenc)
 v3_confflags += $(call cond_enable,/usr/include/vo-amrwbenc/enc_if.h,libvo-amrwbenc)
 
-# extra flags we add
-bitcasa_confflags += --enable-nonfree
-
 # Enable hardened build flags through dpkg-buildflags
 CFLAGS := $(filter-out -Werror=format-security -g -O2,$(shell dpkg-buildflags --get CFLAGS))
 CPPFLAGS := $(shell dpkg-buildflags --get CPPFLAGS)
@@ -166,7 +161,7 @@ static_build_confflags += --disable-ffprobe
 static_build_confflags += --disable-ffserver
 
 # Configuration flags for the non-optimized shared libraries
-shared_build_confflags += $(confflags) --shlibdir=/opt/bci/ffmpeg
+shared_build_confflags += $(confflags) --shlibdir=/usr/lib/$(DEB_HOST_MULTIARCH)
 # amd64 has no problems with optimized shared libs. i386 and arm do.
 ifneq      ($(DEB_HOST_ARCH),amd64)
 shared_build_confflags += $(nooptflags)
